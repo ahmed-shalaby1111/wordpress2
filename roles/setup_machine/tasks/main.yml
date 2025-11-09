@@ -1,0 +1,14 @@
+---
+- name: Update package cache
+  dnf:
+    update_cache: yes
+
+- name: Install required packages
+  dnf:
+    name:
+      - curl
+      - unzip
+      - vim
+      - dnf-plugins-core
+    state: present
+

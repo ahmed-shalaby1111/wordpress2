@@ -1,0 +1,32 @@
+---
+- name: Install MySQL 8
+  dnf:
+    name: mysql-server
+    state: present
+    update_cache: yes
+
+- name: Ensure MySQL service is running
+  service:
+    name: mysqld
+    state: started
+    enabled: yes
+
+- name: Create backup directory
+  file:
+    path: "/home/{{ ansible_user }}/mysql_backups"
+    state: directory
+    mode: '0755'
+
+- name: Copy backup script from template
+  template:
+    src: db_backup.sh.j2
+    dest: "/home/{{ ansible_user }}/mysql_backups/db_backup.sh"
+    mode: '0755'
+
+- name: Create daily cron job for MySQL backup
+  cron:
+    name: "Daily MySQL backup"
+    minute: "0"
+    hour: "2"
+    job: "/home/{{ ansible_user }}/mysql_backups/db_backup.sh"
+

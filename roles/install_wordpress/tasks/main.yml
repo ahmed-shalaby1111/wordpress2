@@ -1,0 +1,60 @@
+---
+- name: Install Apache and PHP packages
+  dnf:
+    name:
+      - httpd
+      - php
+      - php-mysqlnd
+      - php-curl
+      - php-gd
+      - php-mbstring
+      - php-xml
+      - php-xmlrpc
+      - php-soap
+      - php-intl
+      - php-zip
+    state: present
+    update_cache: yes   # ✅ تأكد إن الديبندنسيز محدثة
+
+- name: Download WordPress
+  get_url:
+    url: https://wordpress.org/latest.tar.gz
+    dest: /tmp/wordpress.tar.gz
+    timeout: 120        # ✅ زيادة المهلة لتفادي timeout errors
+    mode: '0644'
+
+- name: Extract WordPress
+  unarchive:
+    src: /tmp/wordpress.tar.gz
+    dest: /var/www/
+    remote_src: yes
+    creates: /var/www/wordpress  # ✅ يمنع التكرار إذا الملف تم فكّه قبل كده
+
+- name: Configure wp-config.php
+  template:
+    src: wp-config.php.j2
+    dest: /var/www/wordpress/wp-config.php
+    mode: '0644'
+
+- name: Set permissions
+  file:
+    path: /var/www/wordpress
+    owner: apache
+    group: apache
+    recurse: yes
+
+- name: Enable Apache rewrite module (Fedora way)
+  lineinfile:
+    path: /etc/httpd/conf/httpd.conf
+    regexp: '^#?LoadModule rewrite_module'
+    line: 'LoadModule rewrite_module modules/mod_rewrite.so'
+
+- name: Ensure Apache is started and enabled
+  service:
+    name: httpd
+    state: started   # ✅ استخدم started بدل restarted عشان أول مرة
+    enabled: yes
+
+- name: Print access URL
+  debug:
+    msg: "✅ WordPress is ready! Visit: http://{{ ansible_default_ipv4.address }}/wordpress"

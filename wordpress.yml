@@ -1,0 +1,8 @@
+---
+- hosts: myservers
+  become: yes
+  roles:
+    - setup_machine
+    - install_mysql
+    - install_wordpress
+
